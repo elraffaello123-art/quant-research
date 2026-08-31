@@ -1,0 +1,29 @@
+# ---- data: huge, expensive to re-download, and not mine to redistribute ----
+data/
+pm/data/
+*.pkl
+*.parquet
+*.jsonl
+
+# ---- third-party papers: copyright, do not republish ----
+docs/reference/*.pdf
+*.pdf
+
+# ---- private working files: personal framing, not portfolio material ----
+CLAUDE.md
+.cursorrules
+.cursorignore
+
+# ---- run artifacts ----
+*.log
+__pycache__/
+.DS_Store
+.ipynb_checkpoints/
+scratchpad/
+
+# ---- AI-session handoff docs: internal workflow, personal framing ----
+BUILD_HARNESS_FIRST.md
+docs/TEACHING_HANDOFF.md
+docs/VARIANCE_BACKTEST_HANDOFF.md
+toolkit/lesson2_pandas_primer.py
+docs/reference/

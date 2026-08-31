@@ -1,0 +1,177 @@
+============================================================================================
+  CLOSED FORM  —  barriers and fee only, no payout rules
+  EV = -fee + P(pass) x split x funded-MLL,   P(pass) = D/(D+T)
+============================================================================================
+  account                     target    MLL  P(pass)      fee        EV
+  ----------------------------------------------------------------------------------------
+  FundedNext Flex 50K           2500   1500    0.375    69.99       380
+  FundedNext Legacy 50K         3000   2000    0.400   199.99       440
+  MFFU Flex 50K                 3000   2000    0.400   153.00       487
+  MFFU Pro 50K                  3000   2000    0.400   157.00       483
+  Tradeify Growth 50K           3000   2000    0.400   145.00       575
+  Tradeify Select Flex 50K      3000   2000    0.400   165.00       555
+  Alpha Zero 50K                3000   2000    0.400   119.00       601
+  Alpha Advanced 50K            4000   1750    0.304   209.00       270
+
+============================================================================================
+  SIMULATED  —  every researched rule switched on, p_denied = 0
+  MNQ, 1:1, risk sized to the contract limit, 15-day eval cap
+============================================================================================
+  account                     P(pass)  theory   E[paid]       EV   EV/wk   died  ranout  trapd
+  ----------------------------------------------------------------------------------------
+  FundedNext Flex 50K           0.221   0.375        31      -39     -51   0.78    0.00   0.91
+  FundedNext Legacy 50K         0.249   0.400        92     -108    -191   0.75    0.00   0.92
+  MFFU Flex 50K                 0.219   0.400        56      -97     -96   0.78    0.00   0.88
+  MFFU Pro 50K                  0.268   0.400       125      -32     -65   0.73    0.00   0.94
+  Tradeify Growth 50K           0.237   0.400        29     -116    -126   0.76    0.00   0.93
+  Tradeify Select Flex 50K      0.201   0.400        69      -96    -127   0.80    0.00   0.91
+  Alpha Zero 50K                0.227   0.400        36      -87     -74   0.77    0.00   0.91
+  Alpha Advanced 50K            0.158   0.304        58     -152    -292   0.84    0.00   0.94
+
+  died   = hit the MLL during the eval
+  ranout = still alive at the 15-day cycle cap, written off
+  trapd  = PASSED the eval and still never got one dollar out
+
+  P(pass) sits BELOW theory everywhere. Two reasons, both real:
+  the trailing MLL keeps the drawdown 2k below your PEAK rather than your
+  start, so D never grows as you profit; and the 15-day cap writes off
+  slow paths that gambler's ruin would eventually have counted as wins.
+
+============================================================================================
+  FUNDED-STAGE SIZING  —  the stage that actually decides the answer
+  Eval risk pinned at the contract limit (speed is free there).
+  Funded risk swept DOWN, because the funded problem is survival, not speed.
+============================================================================================
+  account                         $600     $400     $250     $150     $100      $50      $25     best
+  ----------------------------------------------------------------------------------------
+  FundedNext Flex 50K               -5        7       10      -15      -45      -69      -70      250
+  FundedNext Legacy 50K            -88      -89      -98     -122     -165     -197     -200      600
+  MFFU Flex 50K                    -50      -46      -61      -83     -104     -135     -153      400
+  MFFU Pro 50K                     -39      -44      -69     -108     -167     -237     -239      600
+  Tradeify Growth 50K              -64      -75      -97     -116     -136     -145     -145      600
+  Tradeify Select Flex 50K         -63      -51      -66      -86     -107     -144     -165      400
+  Alpha Zero 50K                   -10      -13      -56      -88     -122     -175     -185      600
+  Alpha Advanced 50K              -145     -156     -168     -188     -220     -278     -287      600
+
+  Each cell is already the best trades-per-day for that risk level.
+  Eval risk is $600. The two stages want
+  sizes an order of magnitude apart.
+
+  BEST JOINT CONFIG PER ACCOUNT
+  account                     fundedRisk  trades/day        EV
+  ----------------------------------------------------------------------------------------
+  FundedNext Flex 50K                250           1        10
+  FundedNext Legacy 50K              600           1       -88
+  MFFU Flex 50K                      400           1       -46
+  MFFU Pro 50K                       600           1       -39
+  Tradeify Growth 50K                600           1       -64
+  Tradeify Select Flex 50K           400           1       -51
+  Alpha Zero 50K                     600           1       -10
+  Alpha Advanced 50K                 600           1      -145
+
+============================================================================================
+  REWARD:RISK  —  does the bracket shape matter?  (MNQ, max risk)
+============================================================================================
+  account                        1:1 EV     1:2 EV     1:3 EV
+  ----------------------------------------------------------------------------------------
+  FundedNext Flex 50K               -40        -36        -38
+  FundedNext Legacy 50K            -129        -93        -91
+  MFFU Flex 50K                     -95        -94       -104
+  MFFU Pro 50K                      -46        -38         -1
+  Tradeify Growth 50K              -117       -118       -123
+  Tradeify Select Flex 50K         -111       -118       -127
+  Alpha Zero 50K                    -86        -89        -96
+  Alpha Advanced 50K               -168       -150       -117
+
+============================================================================================
+  INSTRUMENT  —  MNQ vs NQ at the same dollar risk
+  The contract limit caps both at the SAME dollar risk, so any difference
+  is pure granularity: NQ moves in $200 lumps, MNQ in $20 lumps.
+============================================================================================
+  account                        MNQ EV      NQ EV    MNQ P     NQ P
+  ----------------------------------------------------------------------------------------
+  FundedNext Flex 50K               -40        -18    0.219    0.234
+  FundedNext Legacy 50K            -129        -99    0.247    0.258
+  MFFU Flex 50K                     -95        -62    0.217    0.240
+  MFFU Pro 50K                      -46         -6    0.256    0.282
+  Tradeify Growth 50K              -117       -102    0.232    0.277
+  Tradeify Select Flex 50K         -111        -63    0.192    0.230
+  Alpha Zero 50K                    -86        -67    0.223    0.246
+  Alpha Advanced 50K               -168       -111    0.153    0.162
+
+============================================================================================
+  DISCRETIONARY DENIAL  —  EV vs P(firm refuses the payout)
+  Three of four firms name this strategy in their prohibited-practice docs.
+  The break-even column is the denial rate at which the account turns -EV.
+============================================================================================
+  account                          p=0    p=0.10    p=0.25    p=0.50  breakeven
+  ----------------------------------------------------------------------------------------
+  FundedNext Flex 50K              -40       -46       -49       -55  never +EV
+  FundedNext Legacy 50K           -129      -137      -149      -169  never +EV
+  MFFU Flex 50K                    -95      -101      -109      -125  never +EV
+  MFFU Pro 50K                     -46       -50       -61       -88  never +EV
+  Tradeify Growth 50K             -117      -118      -121      -128  never +EV
+  Tradeify Select Flex 50K        -111      -117      -128      -141  never +EV
+  Alpha Zero 50K                   -86       -88       -95      -105  never +EV
+  Alpha Advanced 50K              -168      -170      -177      -181  never +EV
+
+============================================================================================
+  HEADLINE  —  best config per account, n=20000, 95% bootstrap CI
+  A CI straddling zero means NO measurable edge. Do not read the point
+  estimate as a result when that happens.
+============================================================================================
+  account                          EV             95% CI    EV/mo   days   pass  trapd  verdict
+  ----------------------------------------------------------------------------------------
+  FundedNext Flex 50K              -1 [     -4,      3]       -2    9.0   0.22   0.45    NOISE
+  FundedNext Legacy 50K           -90 [    -97,    -84]     -372    5.1   0.25   0.57      -EV
+  MFFU Flex 50K                   -54 [    -59,    -49]     -135    8.4   0.22   0.43      -EV
+  MFFU Pro 50K                    -31 [    -39,    -23]     -138    4.8   0.27   0.80      -EV
+  Tradeify Growth 50K             -58 [    -65,    -52]     -189    6.5   0.23   0.81      -EV
+  Tradeify Select Flex 50K        -64 [    -69,    -58]     -186    7.2   0.21   0.36      -EV
+  Alpha Zero 50K                  -23 [    -29,    -18]      -69    7.1   0.22   0.62      -EV
+  Alpha Advanced 50K             -145 [   -150,   -140]     -784    3.9   0.16   0.74      -EV
+
+  EV/mo assumes you re-buy immediately and run cycles back to back on ONE
+  account. It does NOT assume parallel accounts.
+
+============================================================================================
+  CAVEATS — read these before acting on any number above
+============================================================================================
+
+  FundedNext Flex 50K   [helpfutures.fundednext.com, fetched 2026-07-20]
+      - eval min trading days not stated anywhere — modelled as 0
+      - 5:1 max reward:risk enforced in Terms; not modelled
+      - 10s min hold (help centre) vs 15-20s (Terms) — conflict
+
+  FundedNext Legacy 50K   [helpfutures.fundednext.com, fetched 2026-07-20]
+      - no stated cap on total payouts — an ABSENCE, not a confirmation
+      - Legacy freeze at initial balance (X=0) omitted from pass-criteria article; taken from the MLL article
+
+  MFFU Flex 50K   [help.myfundedfutures.com, fetched 2026-07-20]
+      - eval fee monthly vs one-time NOT CONFIRMED (plans/flex 404'd)
+      - max payout $2,000 (current guide) vs $5,000 (legacy) — conflict
+      - eval max contracts 3 mini (May guide) vs 5 mini (June legacy page)
+      - sim-funded, not real capital; 5 payouts then must go live
+
+  MFFU Pro 50K   [help.myfundedfutures.com + myfundedfutures.com/plans/pro, 2026-07-20]
+      - fee $157 (per-size article) vs $114/mo promo vs $227/mo list
+      - the one early 60%-of-profit withdrawal option is NOT modelled
+      - sim-funded, not real capital
+
+  Tradeify Growth 50K   [help.tradeify.co, fetched 2026-07-20]
+      - Essential-Rules page says NetLiq/intraday trailing, contradicting the dedicated drawdown article (EOD). Took the EOD article.
+      - 150K DLL $3,750 eval vs $3,000 funded — unresolved, 50K unaffected
+      - max payout is tiered by payout number; modelled at the payout-1 cap
+
+  Tradeify Select Flex 50K   [help.tradeify.co, fetched 2026-07-20]
+      - funded stage starts at HALF the eval contract limit (2 mini), scaling up at $1.5k/$2k/$3k/$4.5k equity — not modelled
+      - requesting a payout instantly locks the drawdown at start+$100
+
+  Alpha Zero 50K   [help.alpha-futures.com, fetched 2026-07-20]
+      - monthly subscription continues on the funded account too
+      - funded scaling starts at ONE mini until +$2,000 profit — not modelled
+      - Zero funded adds news-trading restrictions absent in eval
+
+  Alpha Advanced 50K   [help.alpha-futures.com, fetched 2026-07-20]
+      - 40% consistency applies in EVAL on Advanced — not modelled
+      - monthly subscription continues on the funded account
