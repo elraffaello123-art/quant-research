@@ -53,7 +53,10 @@ _calls = [0]
 _next_slot = [0.0]
 
 
-def _throttle(max_per_sec=10.0):
+RATE = float(os.environ.get("RATE", 10.0))
+
+
+def _throttle(max_per_sec=None):
     """Global paced rate limit shared across worker threads.
 
     Sleeping 1/rate inside each thread would give rate*n_workers requests per
@@ -62,7 +65,7 @@ def _throttle(max_per_sec=10.0):
     unauthenticated read tier is generous but a 429 storm costs more than it
     saves.
     """
-    gap = 1.0 / max_per_sec
+    gap = 1.0 / (max_per_sec or RATE)
     with _lock:
         _calls[0] += 1
         now = time.time()
@@ -232,9 +235,39 @@ def fetch_candles_one(m):
     return "ok"
 
 
-def fetch_candles(markets_path, limit=None, workers=6):
+def sample_markets(ms, n, seed=7):
+    """Stratified random sample by category, proportional to category size.
+
+    The full settled universe is ~290k contracts, which at the API's sustainable
+    rate is an overnight candle fetch for no statistical gain: the paper's
+    N=199,671 gives SE(lambda)=0.004, so N=20,000 still gives SE~0.013 and a
+    t-stat near 14 on lambda=0.178. Precision is not the binding constraint,
+    and it lets the volume/duration/category cuts stay well populated.
+
+    Random, not head-of-file: markets_raw.jsonl is written series-by-series, so
+    the first N rows would be a handful of series rather than a cross-section.
+    """
+    import random
+    if n >= len(ms):
+        return list(ms)
+    rng = random.Random(seed)
+    by_cat = {}
+    for m in ms:
+        by_cat.setdefault(m.get("_category") or "Unknown", []).append(m)
+    out = []
+    for cat, rows in sorted(by_cat.items()):
+        take = max(1, round(n * len(rows) / len(ms)))
+        out.extend(rng.sample(rows, min(take, len(rows))))
+    rng.shuffle(out)
+    print(f"sampled {len(out):,} of {len(ms):,} markets across {len(by_cat)} categories")
+    return out
+
+
+def fetch_candles(markets_path, limit=None, sample=None, workers=6):
     os.makedirs(CANDLES, exist_ok=True)
     ms = [json.loads(l) for l in open(markets_path)]
+    if sample:
+        ms = sample_markets(ms, sample)
     if limit:
         ms = ms[:limit]
     print(f"candles: {len(ms):,} markets, {workers} workers", flush=True)
@@ -271,4 +304,7 @@ if __name__ == "__main__":
     if stage in ("all", "candles"):
         p = os.path.join(DATA, "markets_raw.jsonl")
         lim = os.environ.get("LIMIT")
-        fetch_candles(p, limit=int(lim) if lim else None)
+        smp = os.environ.get("SAMPLE")
+        fetch_candles(p, limit=int(lim) if lim else None,
+                      sample=int(smp) if smp else None,
+                      workers=int(os.environ.get("WORKERS", 6)))
