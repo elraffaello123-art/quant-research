@@ -195,6 +195,31 @@ def complement_invariant(p, y):
     return q[keep], z[keep]
 
 
+def executable_fold(bid, ask, y):
+    """Complement-invariant fold, but at the price you could actually RECEIVE.
+
+    Careful here — this is easy to get wrong and I did get it wrong first time.
+    The fold picks the longshot side and the strategy sells it. Selling means
+    receiving that side's BID:
+
+      longshot is YES (mid <= 0.5)  ->  you receive the YES bid  = bid
+      longshot is NO  (mid  > 0.5)  ->  you receive the NO  bid  = 1 - ASK
+
+    Folding the YES bid as `min(bid, 1-bid)` would use `1 - yes_bid` for the NO
+    half, which is the NO *ask* — the price you'd PAY to buy NO, not the price
+    you'd receive for selling it. That flatters the estimate by a full spread on
+    half the sample, and on this data the median spread is ~9c.
+    """
+    bid = np.asarray(bid, float)
+    ask = np.asarray(ask, float)
+    y = np.asarray(y, float)
+    mid = 0.5 * (bid + ask)
+    q = np.where(mid <= 0.5, bid, 1.0 - ask)
+    z = np.where(mid <= 0.5, y, 1 - y)
+    keep = (q > P_LO) & (q < P_HI)
+    return q[keep], z[keep]
+
+
 def fmt(lam, se, n, label):
     t = lam / se if se and not math.isnan(se) else float("nan")
     stars = "***" if abs(t) > 3.29 else "**" if abs(t) > 2.58 else "*" if abs(t) > 1.96 else ""
@@ -243,13 +268,28 @@ def main():
     print("   The wedge says the quoted side is overpriced, so you SELL it.")
     print("   Selling means hitting the BID, not the mid. Fees come off after.\n")
 
-    # Executable: to sell the YES side you hit the bid; the complement of a
-    # YES-bid sale is buying NO at (1 - bid), so the fold uses the same rule.
-    q_e, z_e = complement_invariant(bid, y)
-    print(fmt(*wang_mle(q_e, z_e), "exec (hit the bid)"))
+    q_e, z_e = executable_fold(bid, ask, y)
+    print(fmt(*wang_mle(q_e, z_e), "exec (receive the longshot's bid)"))
 
     lam_mid = wang_mle(q_m, z_m)[0]
     lam_exe = wang_mle(q_e, z_e)[0]
+
+    # A wide book is not a book. The wedge is largest exactly where spreads are
+    # widest, so a spread filter is not a neutral robustness cut — it is the
+    # trade-off itself. Report it stratified rather than picking one threshold.
+    print("\n  by spread (the mid estimate assumes you capture half of this free):")
+    for lab, lo, hi in (("tight  <=2c ", -1, 0.02),
+                        ("mid   2-10c ", 0.02, 0.10),
+                        ("wide   >10c ", 0.10, 9.0)):
+        msk = (spread > lo) & (spread <= hi)
+        if msk.sum() < 50:
+            continue
+        qq, zz = complement_invariant(mid[msk], y[msk])
+        qe, ze = executable_fold(bid[msk], ask[msk], y[msk])
+        lm = wang_mle(qq, zz)
+        le = wang_mle(qe, ze)
+        print(fmt(*lm, f"{lab} mid "))
+        print(fmt(*le, f"{lab} exec"))
 
     print("\n" + "=" * 78)
     print("4. WHAT IT IS WORTH, IN CENTS")

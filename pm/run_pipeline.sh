@@ -1,9 +1,8 @@
 #!/bin/bash
-# Wait for the market fetch to finish, then pull candles for a stratified sample.
+# Pull candles for a stratified sample, then estimate the wedge.
+# caffeinate: this is a ~1h network job and a sleeping Mac silently stalls it.
 cd "$(dirname "$0")"
-while pgrep -f "kalshi_fetch.py markets" > /dev/null; do sleep 20; done
-echo "markets done: $(wc -l < data/markets_raw.jsonl) rows"
-SAMPLE=20000 RATE=6 python3 kalshi_fetch.py candles
+SAMPLE=20000 RATE=8 WORKERS=8 caffeinate -i python3 kalshi_fetch.py candles
 echo "=== candles complete, running wedge estimation ==="
-python3 wedge.py > wedge_report.txt 2>&1
+caffeinate -i python3 wedge.py > wedge_report.txt 2>&1
 echo "done -> wedge_report.txt"
