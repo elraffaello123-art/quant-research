@@ -324,3 +324,48 @@ The paper's own fee footnote is the tell, and it is honest: implied volatility,
 risk-neutral densities and the VRP "are derived from observed transaction prices, not
 from trader returns, so fee structures do not affect our results." That is correct,
 and it is also the reason none of it is a trading claim.
+
+## The hedged variance risk premium: tested, dead
+
+`pm/vrp.py`, `pm/binance_fetch.py`. 924 Kalshi 15-minute crypto binaries (8 symbols,
+11 days) matched to Binance 1-second spot. This is a genuinely different trade from
+everything above: a VRP is harvested by selling the option and **delta-hedging**, so
+it needs no directional view.
+
+**IV vs RV depends almost entirely on how you measure RV.** 1-second Binance klines
+contain bars with no trade, whose close repeats and contributes a zero return, biasing
+realised vol down and IV/RV up:
+
+| RV sampling | median IV/RV | share IV > RV |
+| --- | --- | --- |
+| 1s | 1.085 | 55.8% |
+| 5s | 1.025 | 52.3% |
+| **15s** | **1.009** | **50.5%** |
+
+Measured at a frequency free of the stale-bar artifact, the typical contract has
+**IV = RV and the sign is a coin flip**. Mean log(IV/RV) is +0.130 (t = 3.34) — but
+with a median of 1.009 that mean is a right tail, not a typical contract. Only BTC
+(1.246) and BNB (1.121) show a premium at 15s; ETH 0.938, SOL 0.919, DOGE 0.930,
+ZEC 0.955 are all below one. Not "across all series."
+
+**And the hedge is unaffordable by two orders of magnitude.** A $1 digital has
+delta n(d2)/(S·σ·√τ), so the hedge notional is n(d2)/(σ√τ) **dollars per dollar of
+contract** — near the money with σ√τ ≈ 0.003 that is ~$130, and it diverges as τ → 0.
+
+| Universe | rebalance | gross P&L | hedge fees | net | spot notional turned over |
+| --- | --- | --- | --- | --- | --- |
+| all | 30s | −2.22c | 140.77c | **−142.99c** | $1,408 |
+| all | 180s | −6.36c | 75.14c | **−81.50c** | $751 |
+| BTC only | 30s | −0.94c | 173.84c | **−174.79c** | $1,738 |
+| BTC only | 180s | −5.44c | 97.91c | **−103.35c** | $979 |
+
+Hedging one $1 contract turns over **$1,408 of spot** at 30-second rebalancing, costing
+$1.41 in Binance taker fees against a contract whose entire payoff range is $1.00.
+
+The decisive line is the counterfactual: **with hedging costs set to ZERO the trade
+still loses 2.22c gross.** There is no premium being eaten by costs — there is no
+premium. Slowing the hedge cuts fees and makes gross P&L worse, which is what
+replication error looks like when gamma is concentrated at the strike near expiry.
+
+This is the failure mode flagged in advance: a digital's gamma explodes exactly where
+it matters, so the position is unhedgeable in practice at any frequency you can afford.
