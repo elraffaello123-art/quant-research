@@ -190,3 +190,90 @@ that nobody wants to quote those books. You get paid the wedge only by becoming 
 bears the risk — the same conclusion reached independently on Polymarket's liquidity-rewards
 programme, where the safe markets were competed and the uncompeted ones were uncompeted because
 they were dangerous.
+
+---
+
+## CORRECTION (2026-09-01): the positive mid-price wedge is an empty-book artifact
+
+The panel above admitted any quote that was not the fully degenerate 0.00/1.00.
+That let through books quoted **0.02 / 0.98** — no bid, no offer, a placeholder
+spread of 96 cents. Those are not books, and they carry the entire positive wedge.
+
+Restricted to genuinely two-sided quotes (bid > 0 and ask < 1), λ by book quality:
+
+| Book quality | N | λ at mid | λ at executable |
+| --- | --- | --- | --- |
+| spread ≤ 2c | 2,605 | −0.023 (t −0.81) | −0.047 (t −1.62) |
+| spread ≤ 5c | 6,723 | −0.036 (t −2.07) | −0.081 (t −4.55) |
+| spread ≤ 10c | 9,137 | −0.024 (t −1.59) | −0.093 (t −6.12) |
+| **spread > 10c** | 7,312 | **+0.109 (t +7.18)** | **−1.005 (t −55.97)** |
+
+**Where a real book exists there is no positive pricing wedge at the mid at all** —
+it is zero to slightly negative. The headline +0.036 was a weighted average of a
+null on tradeable books and a large positive number on quotes nobody could trade.
+
+This strengthens the conclusion rather than weakening it. The earlier framing was
+"the wedge is inside the spread." The accurate framing is stronger: **the wedge is
+an artifact of taking the midpoint of quotes that are not a market.**
+
+## Can you buy the favourite side?
+
+Tested because it is the natural next thought: if longshots are overpriced then
+favourites are underpriced, so buy the 91c and 99c contracts. Buying the favourite
+and selling the longshot are the same position (YES + NO = 1), so this is the same
+question asked from the other end. Code: `pm/favourites.py`.
+
+**The fee settles the 99c case before any data is involved.** Kalshi charges
+`0.07·C·p·(1−p)` **rounded up to the cent**:
+
+| Price | raw fee | charged | total cost | max profit | breakeven win% |
+| --- | --- | --- | --- | --- | --- |
+| 0.90 | 0.630c | 1.00c | 91.00c | +9.00c | 91.00% |
+| 0.95 | 0.333c | 1.00c | 96.00c | +4.00c | 96.00% |
+| 0.98 | 0.137c | 1.00c | 99.00c | +1.00c | 99.00% |
+| **0.99** | 0.069c | **1.00c** | **100.00c** | **0.00c** | **100.00%** |
+
+At 0.99 the raw fee is 0.07c and the charge is a full cent, so total cost is exactly
+$1.00 — the contract's maximum payoff. **Maximum profit is zero with 99c at risk.**
+Buying 99c contracts on Kalshi is strictly −EV regardless of how good the probability
+estimate is. That is arithmetic, not a forecasting question.
+
+And the data agrees at every band (tight books, spread ≤ 5c):
+
+| Ask band | N | win% | mean ask | gross | fee | net |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0.80–0.85 | 133 | 83.46% | 82.39c | +1.07c | 1.47c | −0.40c |
+| 0.85–0.90 | 131 | 83.97% | 86.94c | −2.97c | 1.00c | −3.97c |
+| 0.90–0.93 | 86 | 88.37% | 91.15c | −2.78c | 1.00c | −3.78c |
+| 0.93–0.96 | 79 | 89.87% | 94.09c | −4.22c | 1.00c | −5.22c |
+| 0.96–0.98 | 58 | 91.38% | 96.71c | −5.33c | 1.00c | −6.33c |
+| 0.98–1.00 | 79 | 97.47% | 98.65c | −1.18c | 1.00c | −2.18c |
+
+Favourites are slightly **over**priced at the ask, not underpriced. A 91c contract
+resolves yes 88.4% of the time. Sample sizes per band are small (58–133) and these
+are not precise estimates, but nothing is positive and the fee alone exceeds any
+plausible edge above 0.95.
+
+## Testing Lee, Lee & Lee (2026) — "systematic underconfidence"
+
+SSRN 6748186 studies 113,338 BTC/ETH contracts as digital options and reports a
+positive variance risk premium and systematic underconfidence: prices pulled toward
+0.50, so favourites should be underpriced. It uses **trade VWAP** and contains zero
+occurrences of "bid", "ask", "bid-ask", "transaction cost", or "execution".
+
+Its claim **replicates at the mid** on the crypto contracts, which are the tightest
+books on Kalshi (2c median spread):
+
+| Mid band | N | win% | mean mid | gross edge |
+| --- | --- | --- | --- | --- |
+| 0.55–0.75 | 620 | 65.81% | 62.31c | **+3.49c** |
+| 0.75–0.95 | 121 | 88.43% | 82.29c | **+6.14c** |
+
+Favourites really are underpriced relative to the midpoint. But the edge is
+approximately the half-spread plus the fee. Buying at the ask in the best-populated
+band (0.55–0.65, N=464): +1.74c gross, **−0.26c net**. Break-even at best, negative
+in every other band.
+
+The pattern is the same as the wedge: a real statistical regularity at the midpoint,
+which is exactly consumed by the cost of crossing to reach it. Both papers are
+measuring the price of liquidity and calling it a property of beliefs.
