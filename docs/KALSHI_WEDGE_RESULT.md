@@ -277,3 +277,48 @@ in every other band.
 The pattern is the same as the wedge: a real statistical regularity at the midpoint,
 which is exactly consumed by the cost of crossing to reach it. Both papers are
 measuring the price of liquidity and calling it a property of beliefs.
+
+## A reliability diagram is a weighting choice, not a fact
+
+Lee, Lee & Lee's Figure 4 shows Kalshi contracts priced near 0.35 resolving yes ~9%
+of the time and contracts near 0.65 resolving ~89%. Read literally that is a
+**24-cent** edge, which no functioning book could carry.
+
+Their diagrams pool transactions — 35.9M Kalshi trades across 40,874 contracts
+(median 131 each), 240.8M Polymarket trades across 72,464 (median 2,032). A contract
+with 10,000 trades enters the histogram 10,000 times.
+
+Rebuilding the same diagram from Kalshi quote paths, on 2,184 crypto contracts and
+48,280 observations (`pm/calibration.py`):
+
+| Price bin | mean predicted | realized, **observation**-weighted | realized, **contract**-weighted |
+| --- | --- | --- | --- |
+| 0.2–0.3 | 0.247 | 0.193 | 0.208 |
+| 0.3–0.4 | 0.349 | 0.299 | 0.317 |
+| 0.4–0.5 | 0.451 | 0.389 | **0.450** |
+| 0.5–0.6 | 0.549 | 0.480 | **0.546** |
+| 0.6–0.7 | 0.647 | 0.570 | **0.655** |
+| 0.7–0.8 | 0.747 | 0.691 | **0.772** |
+
+**Weight each contract once and the book is calibrated to within 0.01 across the
+middle of the range.** Weight each observation once and 6–8 percentage points of
+apparent miscalibration appear.
+
+The cause is dispersion in path length: observations per contract run 13 at the 10th
+percentile and **591 at the 90th**, so a handful of long-lived contracts dominate the
+pooled statistic. It is *not* an asymmetry in which outcome lingers — contracts ending
+no contribute 1.03× the observations of contracts ending yes, which is nothing.
+
+Taking one observation per contract at 5% of life gives the same well-calibrated
+answer as contract-weighting, with gaps inside ±0.03 in every populated bin.
+
+**Stated precisely:** the artifact demonstrated here has the *opposite sign* to the
+paper's curve, and the paper pools trades where this pools quotes. This does not
+prove their figure is this artifact. It proves something weaker and still decisive —
+a transaction-weighted reliability diagram is not evidence about whether contracts at
+a given price are correctly priced, and cannot be read as a 24-cent edge.
+
+The paper's own fee footnote is the tell, and it is honest: implied volatility,
+risk-neutral densities and the VRP "are derived from observed transaction prices, not
+from trader returns, so fee structures do not affect our results." That is correct,
+and it is also the reason none of it is a trading claim.
