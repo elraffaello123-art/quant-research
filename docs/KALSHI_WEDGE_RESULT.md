@@ -304,10 +304,12 @@ Rebuilding the same diagram from Kalshi quote paths, on 2,184 crypto contracts a
 middle of the range.** Weight each observation once and 6–8 percentage points of
 apparent miscalibration appear.
 
-The cause is dispersion in path length: observations per contract run 13 at the 10th
-percentile and **591 at the 90th**, so a handful of long-lived contracts dominate the
-pooled statistic. It is *not* an asymmetry in which outcome lingers — contracts ending
-no contribute 1.03× the observations of contracts ending yes, which is nothing.
+The cause is dispersion in path length. Across contracts the median path is 14
+observations, p90 is 33, p99 is 162 and the maximum is **858** — so the **top 1% of
+contracts supply 17.6% of all pooled observations, and the top 10% supply 42.2%**.
+A minority of long-lived contracts dominates the pooled statistic. It is *not* an
+asymmetry in which outcome lingers — contracts ending no contribute 1.03× the
+observations of contracts ending yes, which is nothing.
 
 Taking one observation per contract at 5% of life gives the same well-calibrated
 answer as contract-weighting, with gaps inside ±0.03 in every populated bin.

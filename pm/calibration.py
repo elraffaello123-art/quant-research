@@ -18,9 +18,9 @@ This module rebuilds the same diagram from Kalshi quote paths three ways:
   C. every time point pooled, but REWEIGHTED so each contract counts once
 
 A and C agree and show a well-calibrated book. B shows 5-8 percentage points of
-systematic miscalibration that exists only because observations-per-contract
-ranges from 13 at the 10th percentile to 591 at the 90th. A handful of
-long-lived contracts dominate the statistic.
+systematic miscalibration that exists only because path length is heavily
+skewed: median 14 observations, p99 162, max 858, so the top 1% of contracts
+supply 17.6% of all pooled observations and the top 10% supply 42.2%.
 
 The mechanism is NOT a yes/no asymmetry in contract lifetime — contracts ending
 no contribute 1.03x the observations of contracts ending yes, which is nothing.
@@ -97,9 +97,14 @@ def table(rows, bins=((0.2, 0.3), (0.3, 0.4), (0.4, 0.5),
     npath = np.array([len(r["path"]) for r in rows])
 
     print(f"contracts {len(rows):,}   pooled observations {len(p):,}")
-    print(f"observations per contract: median {np.median(npath):.0f}, "
-          f"p10 {np.percentile(npath,10):.0f}, p90 {np.percentile(npath,90):.0f} "
-          f"({np.percentile(npath,90)/max(np.median(npath),1):.0f}x spread)")
+    order = np.argsort(-npath)
+    tot = npath.sum()
+    top1 = npath[order[:max(1, len(npath)//100)]].sum() / tot * 100
+    top10 = npath[order[:max(1, len(npath)//10)]].sum() / tot * 100
+    print(f"path length per contract: median {np.median(npath):.0f}, "
+          f"p99 {np.percentile(npath,99):.0f}, max {npath.max()}")
+    print(f"  top 1% of contracts supply {top1:.1f}% of pooled observations; "
+          f"top 10% supply {top10:.1f}%")
 
     print(f"\n{'bin':>10s} {'N obs':>8s} {'mean pred':>10s} "
           f"{'realized OBS-wt':>16s} {'realized CONTRACT-wt':>21s}")
