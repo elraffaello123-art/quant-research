@@ -115,37 +115,54 @@ answers.
 
 ---
 
-## Live work: the Kalshi pricing wedge
+## The Kalshi pricing wedge — result
 
 `pm/` — replication and honest-cost audit of Yang (2026), *Pricing Prediction Markets:
-Incomplete Markets, Selection Rules, and Risk Premia*.
+Incomplete Markets, Selection Rules, and Risk Premia*. Full write-up:
+[`docs/KALSHI_WEDGE_RESULT.md`](docs/KALSHI_WEDGE_RESULT.md).
 
-The paper fits a Wang transform to 291,309 resolved prediction-market contracts:
+The paper fits a Wang transform to 291,309 resolved prediction-market contracts,
+`p_mkt = Φ(Φ⁻¹(p*) + λ)`, and finds λ ≈ 0.178 on Kalshi — prices sitting systematically above
+true probabilities, with the wedge larger where volume is lower and duration longer.
 
-```
-p_mkt = Φ( Φ⁻¹(p*) + λ )
-```
+It estimates λ on hourly **mid** prices. Kalshi's candlestick endpoint also returns `yes_bid`
+and `yes_ask`, so I re-estimated on the price a taker could actually hit. On 17,671 settled
+2026 contracts:
 
-and finds λ ≈ 0.178 on Kalshi — market prices sitting systematically **above** true
-probabilities. Its cross-section is economically clean: the wedge is **larger where volume is
-lower** (`ln Volume` = −0.057), **larger for longer-dated contracts** (`ln Duration` = +0.109),
-and **decays over contract life** with a half-life of 33% of the contract's lifetime.
+| Estimator | λ | t |
+| --- | --- | --- |
+| Complement-invariant, at the mid | **+0.036** | +3.45 |
+| Complement-invariant, **at the executable bid** | **−0.441** | −39.3 |
 
-**The open question, which is the whole reason for this build:** the paper estimates λ on
-hourly **mid** prices. Kalshi's public candlestick endpoint also returns `yes_bid` and
-`yes_ask`. So the wedge can be re-estimated on the price a taker could actually have hit.
+The spread cut says why:
 
-A first sanity check says this matters enormously. At λ = 0.049 (the paper's own
-complement-invariant Polymarket estimate) a contract quoted at 0.20 is worth 0.187 — **1.3
-cents of edge**, against 2–4 cent spreads in exactly the thin markets where the wedge is
-largest. If that pattern holds, the wedge is real, publishable, and entirely inside the
-spread: a risk premium paid to market makers for bearing inventory and adverse-selection
-risk, not an edge available to a taker.
+| Spread | λ at mid | λ at executable |
+| --- | --- | --- |
+| tight ≤2c | −0.060 | −0.081 |
+| 2–10c | −0.031 | −0.113 |
+| wide >10c | **+0.114** | **−1.007** |
 
-Kalshi's λ = 0.178 is bigger and may clear its costs. That is the falsifiable question this
-directory exists to answer, and it is being answered on the book, not the mid.
+Where the book is tight there is no positive wedge at all. The entire effect lives in books
+wider than 10 cents and inverts when priced at the bid. Selling the longshot at the executable
+price loses 6–17 cents per contract before fees, at every price level.
 
----
+**The volume cross-section does replicate** and is not a spread artifact — terciles run
++0.181 / +0.038 / −0.094 across nearly identical median spreads (8c / 8c / 7c). **The duration
+effect does not**: its terciles run 4c → 6c → 18c in spread, so duration and spread are the
+same fact wearing two hats.
+
+Survives an event-clustered bootstrap (t = 3.30), leave-largest-series-out, and a sports /
+non-sports split. I could **not** reproduce the paper's level — 0.025–0.048 against its 0.172
+for the same year, across every variant of filter, price field and specification I tried. One
+candidate explanation (that its Kalshi sample keeps the crypto randomness shards its Polymarket
+sample excludes) was tested directly and rejected: those contracts give +0.041, indistinguishable
+from the main sample. The discrepancy is documented rather than resolved, and it does not touch
+the audit's conclusion, since the mid and executable estimates are computed on the same contracts.
+
+**Conclusion: the wedge is the spread.** It is a risk premium paid to makers for bearing
+inventory and adverse-selection risk in thin markets, not an edge available to a taker. "Avoid
+the markets the quant shops make" correctly describes where λ lives and is useless as a trading
+instruction, because the reason it lives there is that nobody wants to quote those books.
 
 ## Layout
 

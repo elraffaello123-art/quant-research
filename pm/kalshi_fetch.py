@@ -218,10 +218,19 @@ def fetch_candles_one(m):
         return "badtime"
     if e <= s:
         return "badtime"
-    # 60-min candles; fall back to daily for very long contracts (API caps
-    # the number of periods returned per request).
+    # Pick the interval from the contract's span. Two hard constraints:
+    #   - the API refuses (with a misleading HTTP 429) any request for more
+    #     than 5000 candlesticks
+    #   - the analysis needs >= 4 observations per contract, so a 15-minute
+    #     crypto market is invisible at a 60-minute interval
+    # Minute candles below a day, hourly up to ~200 days, daily beyond.
     span_h = (e - s) / 3600.0
-    interval = 60 if span_h <= 4000 else 1440
+    if span_h <= 24:
+        interval = 1
+    elif span_h <= 4000:
+        interval = 60
+    else:
+        interval = 1440
     u = (f"series/{series}/markets/{tk}/candlesticks"
          f"?start_ts={s}&end_ts={e}&period_interval={interval}")
     try:

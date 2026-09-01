@@ -1,0 +1,66 @@
+
+contracts with a usable opening book: 17,671
+median spread: 7.90c   mean: 30.22c   p90: 91.00c
+
+==============================================================================
+1. DIRECTIONAL lambda (replicating the paper's specification)
+==============================================================================
+  mid  (paper's estimator)           lambda=+0.0255  SE=0.0103  t= +2.48*    N=17,671
+
+==============================================================================
+2. COMPLEMENT-INVARIANT lambda — is it a level effect or a label artifact?
+==============================================================================
+  mid                                lambda=+0.0356  SE=0.0103  t= +3.45***  N=17,671
+
+==============================================================================
+3. THE HONEST-PRICE TEST — can a taker actually get this?
+==============================================================================
+   The wedge says the quoted side is overpriced, so you SELL it.
+   Selling means hitting the BID, not the mid. Fees come off after.
+
+  exec (receive the longshot's bid)  lambda=-0.4413  SE=0.0112  t=-39.34***  N=14,393
+
+  by spread (the mid estimate assumes you capture half of this free):
+  tight  <=2c  mid                   lambda=-0.0600  SE=0.0260  t= -2.31*    N=3,088
+  tight  <=2c  exec                  lambda=-0.0807  SE=0.0262  t= -3.08**   N=2,967
+  mid   2-10c  mid                   lambda=-0.0306  SE=0.0172  t= -1.78     N=6,794
+  mid   2-10c  exec                  lambda=-0.1129  SE=0.0175  t= -6.45***  N=6,281
+  wide   >10c  mid                   lambda=+0.1141  SE=0.0148  t= +7.72***  N=7,789
+  wide   >10c  exec                  lambda=-1.0073  SE=0.0180  t=-56.00***  N=5,145
+
+==============================================================================
+4. WHAT IT IS WORTH, IN CENTS
+==============================================================================
+     quoted   edge@mid   edge@exec     fee      net
+       0.05      0.36c      -6.44c   1.00c   -7.44c
+       0.10      0.61c     -10.04c   1.00c  -11.04c
+       0.20      0.98c     -14.45c   2.00c  -16.45c
+       0.35      1.31c     -17.23c   2.00c  -19.23c
+       0.50      1.42c     -17.05c   2.00c  -19.05c
+
+   Median spread is 7.90c. Half of that is what the mid estimate
+   silently assumes you capture for free.
+
+==============================================================================
+5. CROSS-SECTION — does the paper's economics replicate?
+==============================================================================
+
+  by volume:
+  low    (median spread  8.00c)      lambda=+0.1812  SE=0.0188  t= +9.65***  N=5,832
+  mid    (median spread  8.00c)      lambda=+0.0379  SE=0.0179  t= +2.12*    N=6,007
+  high   (median spread  7.00c)      lambda=-0.0935  SE=0.0172  t= -5.42***  N=5,832
+
+  by duration (h):
+  low    (median spread  4.00c)      lambda=-0.0534  SE=0.0177  t= -3.02**   N=5,832
+  mid    (median spread  6.00c)      lambda=+0.0447  SE=0.0176  t= +2.53*    N=6,007
+  high   (median spread 18.00c)      lambda=+0.1197  SE=0.0183  t= +6.53***  N=5,832
+
+  by category:
+  Sports                 (spr  8.00c) lambda=+0.0323  SE=0.0109  t= +2.96**   N=15,458
+  Climate and Weather    (spr  3.00c) lambda=+0.0078  SE=0.0634  t= +0.12     N=610
+  Mentions               (spr 17.00c) lambda=+0.0515  SE=0.0639  t= +0.81     N=440
+  Commodities            (spr  3.00c) lambda=+0.0058  SE=0.0824  t= +0.07     N=328
+  Entertainment          (spr 18.00c) lambda=+0.4602  SE=0.1043  t= +4.41***  N=233
+  Financials             (spr  6.00c) lambda=-0.0778  SE=0.0998  t= -0.78     N=230
+  Economics              (spr 10.00c) lambda=+0.2475  SE=0.1188  t= +2.08*    N=162
+  Elections              (spr  2.00c) lambda=-0.0548  SE=0.1555  t= -0.35     N=104
